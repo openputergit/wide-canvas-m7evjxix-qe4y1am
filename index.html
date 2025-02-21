@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Media Downloader</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2196F3',
+                        secondary: '#FF5722',
+                        background: '#F5F5F5',
+                        textDark: '#212121',
+                        success: '#4CAF50'
+                    },
+                    fontFamily: {
+                        'montserrat': ['Montserrat', 'sans-serif'],
+                        'roboto': ['Roboto', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .progress-bar {
+            transition: width 0.3s ease-in-out;
+        }
+        .custom-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+    </style>
+</head>
+<body class="bg-background min-h-screen font-roboto text-textDark">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <h1 class="font-montserrat text-4xl font-bold mb-4">Universal Media Downloader</h1>
+            <p class="text-gray-600">Download videos and audio from any URL</p>
+        </header>
+
+        <!-- URL Input Section -->
+        <div class="bg-white rounded-lg p-6 mb-8 custom-shadow">
+            <div class="flex flex-col md:flex-row gap-4">
+                <input type="text" id="urlInput" placeholder="Paste your URL here" 
+                       class="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                <button onclick="addToQueue()" 
+                        class="bg-primary text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors font-medium">
+                    Add to Queue
+                </button>
+            </div>
+        </div>
+
+        <!-- Format Selection -->
+        <div class="bg-white rounded-lg p-6 mb-8 custom-shadow">
+            <h2 class="font-montserrat font-semibold text-xl mb-4">Download Options</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block mb-2">Format</label>
+                    <select id="formatSelect" class="w-full p-3 border border-gray-300 rounded-lg">
+                        <option value="mp4">MP4 Video</option>
+                        <option value="mp3">MP3 Audio</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block mb-2">Quality</label>
+                    <select id="qualitySelect" class="w-full p-3 border border-gray-300 rounded-lg">
+                        <option value="high">High (1080p)</option>
+                        <option value="medium">Medium (720p)</option>
+                        <option value="low">Low (480p)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Download Queue -->
+        <div class="bg-white rounded-lg p-6 custom-shadow">
+            <h2 class="font-montserrat font-semibold text-xl mb-4">Download Queue</h2>
+            <div id="downloadQueue" class="space-y-4">
+                <!-- Downloads will be added here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let downloads = [];
+        let downloadId = 0;
+
+        function addToQueue() {
+            const url = document.getElementById('urlInput').value;
+            if (!url) {
+                alert('Please enter a URL');
+                return;
+            }
+
+            const format = document.getElementById('formatSelect').value;
+            const quality = document.getElementById('qualitySelect').value;
+            
+            const download = {
+                id: downloadId++,
+                url,
+                format,
+                quality,
+                progress: 0,
+                status: 'queued'
+            };
+
+            downloads.push(download);
+            renderDownloads();
+            document.getElementById('urlInput').value = '';
+            
+            // Simulate download
+            startDownload(download.id);
+        }
+
+        function startDownload(id) {
+            const download = downloads.find(d => d.id === id);
+            download.status = 'downloading';
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 10;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    download.status = 'completed';
+                }
+                download.progress = Math.min(progress, 100);
+                renderDownloads();
+            }, 500);
+        }
+
+        function renderDownloads() {
+            const queue = document.getElementById('downloadQueue');
+            queue.innerHTML = downloads.map(download => `
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="truncate flex-1 mr-4">
+                            <p class="font-medium">${download.url}</p>
+                            <p class="text-sm text-gray-500">${download.format.toUpperCase()} - ${download.quality}</p>
+                        </div>
+                        <span class="text-sm ${download.status === 'completed' ? 'text-success' : 'text-primary'}">
+                            ${download.status === 'completed' ? 
+                                '<i class="bi bi-check-circle-fill"></i> Complete' : 
+                                `${Math.round(download.progress)}%`}
+                        </span>
+                    </div>
+                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div class="h-full progress-bar ${download.status === 'completed' ? 'bg-success' : 'bg-primary'}"
+                             style="width: ${download.progress}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
